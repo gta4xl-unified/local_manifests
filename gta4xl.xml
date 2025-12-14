@@ -3,21 +3,21 @@
   
     <remote name="gta4xl-unified" fetch="https://github.com/gta4xl-unified" />
 
-    <project name="android_device_samsung_gta4xl" path="device/samsung/gta4xl" remote="gta4xl-org" />
-    <project name="android_device_samsung_gta4xl-common" path="device/samsung/gta4xl-common" remote="gta4xl-org" />
-    <project name="android_kernel_samsung_gta4xl" path="kernel/samsung/gta4xl" remote="gta4xl-org" />
-    <project name="android_vendor_samsung_gta4xl" path="vendor/samsung/gta4xl" remote="gta4xl-org" />
-    <project name="android_vendor_samsung_gta4xl-common" path="vendor/samsung/gta4xl-common" remote="gta4xl-org" />
-    <project name="android_hardware_samsung" path="hardware/samsung" remote="gta4xl-org" />
-    <project name="android_device_samsung_slsi_sepolicy" path="device/samsung_slsi/sepolicy" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi_libbt" path="hardware/samsung_slsi/libbt" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_config" path="hardware/samsung_slsi-linaro/config" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_exynos" path="hardware/samsung_slsi-linaro/exynos" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_exynos5" path="hardware/samsung_slsi-linaro/exynos5" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_graphics" path="hardware/samsung_slsi-linaro/graphics" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_interfaces" path="hardware/samsung_slsi-linaro/interfaces" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi-linaro_openmax" path="hardware/samsung_slsi-linaro/openmax" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi_scsc_wifibt_wifi_hal" path="hardware/samsung_slsi/scsc_wifibt/wifi_hal" remote="gta4xl-org" />
-    <project name="android_hardware_samsung_slsi_scsc_wifibt_wpa_supplicant_lib" path="hardware/samsung_slsi/scsc_wifibt/wpa_supplicant_lib" remote="gta4xl-org" />
+    <project name="android_device_samsung_gta4xl" path="device/samsung/gta4xl" remote="gta4xl-unified" />
+    <project name="android_device_samsung_gta4xl-common" path="device/samsung/gta4xl-common" remote="gta4xl-unified" />
+    <project name="android_kernel_samsung_gta4xl" path="kernel/samsung/gta4xl" remote="gta4xl-unified" />
+    <project name="android_vendor_samsung_gta4xl" path="vendor/samsung/gta4xl" remote="gta4xl-unified" />
+    <project name="android_vendor_samsung_gta4xl-common" path="vendor/samsung/gta4xl-common" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung" path="hardware/samsung" remote="gta4xl-unified" />
+    <project name="android_device_samsung_slsi_sepolicy" path="device/samsung_slsi/sepolicy" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi_libbt" path="hardware/samsung_slsi/libbt" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_config" path="hardware/samsung_slsi-linaro/config" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_exynos" path="hardware/samsung_slsi-linaro/exynos" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_exynos5" path="hardware/samsung_slsi-linaro/exynos5" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_graphics" path="hardware/samsung_slsi-linaro/graphics" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_interfaces" path="hardware/samsung_slsi-linaro/interfaces" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi-linaro_openmax" path="hardware/samsung_slsi-linaro/openmax" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi_scsc_wifibt_wifi_hal" path="hardware/samsung_slsi/scsc_wifibt/wifi_hal" remote="gta4xl-unified" />
+    <project name="android_hardware_samsung_slsi_scsc_wifibt_wpa_supplicant_lib" path="hardware/samsung_slsi/scsc_wifibt/wpa_supplicant_lib" remote="gta4xl-unified" />
 
 </manifest>
