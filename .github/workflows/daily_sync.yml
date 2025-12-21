@@ -17,9 +17,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
         run: |
           ORG="gta4xl-unified"
-          BRANCH="lineage-23.1"
+          BRANCH="lineage-23.1"  # Set this to the version you want
           
-          echo "🚀 Starting Daily Sync for $ORG..."
+          echo "🚀 Starting Daily Sync for $ORG (Target: $BRANCH)..."
 
           REPOS=$(gh repo list $ORG --limit 100 --json name -q '.[].name')
 
@@ -34,7 +34,7 @@ jobs:
             gh repo clone "$ORG/$REPO" "tmp_$REPO" -- --bare
             cd "tmp_$REPO" || continue
 
-            # 2. FIX: Set the remote URL to include the token explicitly
+            # 2. Authenticate Push
             git remote set-url origin "https://x-access-token:$GH_TOKEN@github.com/$ORG/$REPO.git"
 
             # 3. Define Upstreams
@@ -43,27 +43,40 @@ jobs:
 
             SUCCESS=false
 
+            # --- TRY LINEAGEOS ---
             git remote add upstream_los "$UPSTREAM_LOS"
-            if git fetch upstream_los "$BRANCH":"$BRANCH" --depth 1 2>/dev/null; then
-                echo "✅ Found update in LineageOS"
-                SUCCESS=true
-            else
-                git remote add upstream_l4 "$UPSTREAM_L4"
-                if git fetch upstream_l4 "$BRANCH":"$BRANCH" --depth 1 2>/dev/null; then
-                    echo "✅ Found update in Linux4"
+            # FIX: Fetch ALL heads so we definitely see new branches like 23.1
+            if git fetch upstream_los "+refs/heads/*:refs/remotes/upstream_los/*" --depth 1; then
+                # Check if our specific branch exists in what we just fetched
+                if git show-ref --verify --quiet "refs/remotes/upstream_los/$BRANCH"; then
+                    echo "✅ Found $BRANCH in LineageOS"
+                    # Create the branch locally pointing to the upstream version
+                    git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_los/$BRANCH"
                     SUCCESS=true
+                fi
+            fi
+            
+            # --- TRY LINUX4 (If LOS failed) ---
+            if [ "$SUCCESS" = false ]; then
+                git remote add upstream_l4 "$UPSTREAM_L4"
+                if git fetch upstream_l4 "+refs/heads/*:refs/remotes/upstream_l4/*" --depth 1; then
+                    if git show-ref --verify --quiet "refs/remotes/upstream_l4/$BRANCH"; then
+                        echo "✅ Found $BRANCH in Linux4"
+                        git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_l4/$BRANCH"
+                        SUCCESS=true
+                    fi
                 fi
             fi
 
             # 4. Push Update
             if [ "$SUCCESS" = true ]; then
+                # Push the specific branch explicitly
                 git push origin "$BRANCH"
-                echo "🚀 Synced $REPO"
+                echo "🚀 Synced $REPO to $BRANCH"
             else
-                echo "⚠️  No upstream updates found."
+                echo "⚠️  Branch $BRANCH not found in any upstream."
             fi
 
-            # Cleanup
             cd ..
             rm -rf "tmp_$REPO"
           done
