@@ -2,8 +2,8 @@ name: Daily Repo Sync
 
 on:
   schedule:
-    - cron: '0 0 * * *' 
-  workflow_dispatch:     
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   sync-all:
@@ -13,11 +13,13 @@ jobs:
         run: echo "${{ secrets.GH_PAT_TOKEN }}" | gh auth login --with-token
 
       - name: Run Sync Script
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
         run: |
           ORG="gta4xl-unified"
           BRANCH="lineage-23.1"
           
-          echo "🚀 Starting Daily Sync for $ORG (Sources: LineageOS, Linux4)..."
+          echo "🚀 Starting Daily Sync for $ORG..."
 
           REPOS=$(gh repo list $ORG --limit 100 --json name -q '.[].name')
 
@@ -32,7 +34,10 @@ jobs:
             gh repo clone "$ORG/$REPO" "tmp_$REPO" -- --bare
             cd "tmp_$REPO" || continue
 
-            # 2. Define Upstreams
+            # 2. FIX: Set the remote URL to include the token explicitly
+            git remote set-url origin "https://x-access-token:$GH_TOKEN@github.com/$ORG/$REPO.git"
+
+            # 3. Define Upstreams
             UPSTREAM_LOS="https://github.com/LineageOS/$REPO.git"
             UPSTREAM_L4="https://github.com/linux4-bringup-priv/$REPO.git"
 
@@ -44,19 +49,18 @@ jobs:
                 SUCCESS=true
             else
                 git remote add upstream_l4 "$UPSTREAM_L4"
-                # Note: Uses your PAT automatically for private repo access
                 if git fetch upstream_l4 "$BRANCH":"$BRANCH" --depth 1 2>/dev/null; then
                     echo "✅ Found update in Linux4"
                     SUCCESS=true
                 fi
             fi
 
-            # 3. Push Update
+            # 4. Push Update
             if [ "$SUCCESS" = true ]; then
                 git push origin "$BRANCH"
                 echo "🚀 Synced $REPO"
             else
-                echo "⚠️  No upstream updates found or branch missing."
+                echo "⚠️  No upstream updates found."
             fi
 
             # Cleanup
