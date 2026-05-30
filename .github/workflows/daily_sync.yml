@@ -8,6 +8,7 @@ on:
 jobs:
   sync-all:
     runs-on: ubuntu-latest
+
     steps:
       - name: Authenticate GitHub CLI
         run: echo "${{ secrets.GH_PAT_TOKEN }}" | gh auth login --with-token
@@ -17,64 +18,87 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
         run: |
           ORG="gta4xl-unified"
-          BRANCH="lineage-23.1"  # Set this to the version you want
-          
-          echo "🚀 Starting Daily Sync for $ORG (Target: $BRANCH)..."
+          BRANCH="lineage-23.2"
 
-          REPOS=$(gh repo list $ORG --limit 100 --json name -q '.[].name')
+          # Vendor repos that come from TheMuppets instead of LineageOS
+          declare -A MUPPETS_MAP=(
+            ["android_vendor_samsung_gta4xl"]="proprietary_vendor_samsung_gta4xl"
+            ["android_vendor_samsung_gta4xl-common"]="proprietary_vendor_samsung_gta4xl-common"
+          )
+
+          echo "🚀 Starting Daily Sync for $ORG (Target: $BRANCH)..."
+          REPOS=$(gh repo list $ORG --limit 200 --json name -q '.[].name')
 
           for REPO in $REPOS; do
-            if [[ "$REPO" == "local_manifests" ]]; then continue; fi
+            # Skip repos that don't need syncing
+            if [[ "$REPO" == "local_manifests" ]]; then
+              echo "⏭️  Skipping $REPO"
+              continue
+            fi
 
             echo "------------------------------------------------------"
             echo "📦 Processing: $REPO"
 
-            # 1. Clone bare
             rm -rf "tmp_$REPO"
             gh repo clone "$ORG/$REPO" "tmp_$REPO" -- --bare
             cd "tmp_$REPO" || continue
 
-            # 2. Authenticate Push
             git remote set-url origin "https://x-access-token:$GH_TOKEN@github.com/$ORG/$REPO.git"
-
-            # 3. Define Upstreams
-            UPSTREAM_LOS="https://github.com/LineageOS/$REPO.git"
-            UPSTREAM_L4="https://github.com/linux4-bringup-priv/$REPO.git"
 
             SUCCESS=false
 
-            # --- TRY LINEAGEOS ---
-            git remote add upstream_los "$UPSTREAM_LOS"
-            # FIX: Fetch ALL heads so we definitely see new branches like 23.1
-            if git fetch upstream_los "+refs/heads/*:refs/remotes/upstream_los/*" --depth 1; then
-                # Check if our specific branch exists in what we just fetched
+            # ── TheMuppets vendor repos ──────────────────────────────────────
+            if [[ -v MUPPETS_MAP["$REPO"] ]]; then
+              MUPPETS_REPO="${MUPPETS_MAP[$REPO]}"
+              UPSTREAM_URL="https://github.com/TheMuppets/${MUPPETS_REPO}.git"
+              echo "🧸 Using TheMuppets upstream: $UPSTREAM_URL"
+              git remote add upstream_muppets "$UPSTREAM_URL"
+              if git fetch upstream_muppets "+refs/heads/$BRANCH:refs/remotes/upstream_muppets/$BRANCH" --depth 1; then
+                if git show-ref --verify --quiet "refs/remotes/upstream_muppets/$BRANCH"; then
+                  echo "✅ Found $BRANCH in TheMuppets"
+                  git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_muppets/$BRANCH"
+                  SUCCESS=true
+                fi
+              fi
+
+            else
+              # ── LineageOS upstream ─────────────────────────────────────────
+              UPSTREAM_LOS="https://github.com/LineageOS/$REPO.git"
+              git remote add upstream_los "$UPSTREAM_LOS"
+              if git fetch upstream_los "+refs/heads/$BRANCH:refs/remotes/upstream_los/$BRANCH" --depth 1; then
                 if git show-ref --verify --quiet "refs/remotes/upstream_los/$BRANCH"; then
-                    echo "✅ Found $BRANCH in LineageOS"
-                    # Create the branch locally pointing to the upstream version
-                    git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_los/$BRANCH"
-                    SUCCESS=true
+                  echo "✅ Found $BRANCH in LineageOS"
+                  git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_los/$BRANCH"
+                  SUCCESS=true
                 fi
-            fi
-            
-            # --- TRY LINUX4 (If LOS failed) ---
-            if [ "$SUCCESS" = false ]; then
+              fi
+
+              # ── Linux4 fallback ────────────────────────────────────────────
+              if [ "$SUCCESS" = false ]; then
+                UPSTREAM_L4="https://github.com/linux4-bringup-priv/$REPO.git"
                 git remote add upstream_l4 "$UPSTREAM_L4"
-                if git fetch upstream_l4 "+refs/heads/*:refs/remotes/upstream_l4/*" --depth 1; then
-                    if git show-ref --verify --quiet "refs/remotes/upstream_l4/$BRANCH"; then
-                        echo "✅ Found $BRANCH in Linux4"
-                        git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_l4/$BRANCH"
-                        SUCCESS=true
-                    fi
+                if git fetch upstream_l4 "+refs/heads/$BRANCH:refs/remotes/upstream_l4/$BRANCH" --depth 1; then
+                  if git show-ref --verify --quiet "refs/remotes/upstream_l4/$BRANCH"; then
+                    echo "✅ Found $BRANCH in Linux4"
+                    git update-ref "refs/heads/$BRANCH" "refs/remotes/upstream_l4/$BRANCH"
+                    SUCCESS=true
+                  fi
                 fi
+              fi
             fi
 
-            # 4. Push Update
+            # ── Push & set default branch ──────────────────────────────────
             if [ "$SUCCESS" = true ]; then
-                # Push the specific branch explicitly
-                git push origin "$BRANCH"
-                echo "🚀 Synced $REPO to $BRANCH"
+              git push origin "$BRANCH" --force
+              echo "🚀 Synced $REPO → $BRANCH"
+
+              # Set default branch via API
+              gh api "repos/$ORG/$REPO" \
+                --method PATCH \
+                --field "default_branch=$BRANCH" \
+                > /dev/null && echo "🔀 Default branch set to $BRANCH"
             else
-                echo "⚠️  Branch $BRANCH not found in any upstream."
+              echo "⚠️  Branch $BRANCH not found in any upstream for $REPO"
             fi
 
             cd ..
