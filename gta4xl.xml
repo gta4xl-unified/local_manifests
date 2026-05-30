@@ -7,8 +7,8 @@
     <project name="android_device_samsung_gta4xl" path="device/samsung/gta4xl" remote="gta4xl-unified" />
     <project name="android_device_samsung_gta4xl-common" path="device/samsung/gta4xl-common" remote="gta4xl-unified" />
     <project name="android_kernel_samsung_gta4xl" path="kernel/samsung/gta4xl" remote="gta4xl-unified" />
-    <project name="android_vendor_samsung_gta4xl" path="vendor/samsung/gta4xl" remote="themuppets" name="proprietary_vendor_samsung_gta4xl" />
-    <project name="android_vendor_samsung_gta4xl-common" path="vendor/samsung/gta4xl-common" remote="themuppets" name="proprietary_vendor_samsung_gta4xl-common" />
+    <project name="proprietary_vendor_samsung_gta4xl" path="vendor/samsung/gta4xl" remote="themuppets" />
+    <project name="proprietary_vendor_samsung_gta4xl-common" path="vendor/samsung/gta4xl-common" remote="themuppets" />
     <project name="android_hardware_samsung" path="hardware/samsung" remote="gta4xl-unified" />
     <project name="android_device_samsung_slsi_sepolicy" path="device/samsung_slsi/sepolicy" remote="gta4xl-unified" />
     <project name="android_hardware_samsung_slsi_libbt" path="hardware/samsung_slsi/libbt" remote="gta4xl-unified" />
